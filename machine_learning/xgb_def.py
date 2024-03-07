@@ -22,8 +22,8 @@ class XGBOptimizer:
             'reg_alpha': trial.suggest_loguniform('reg_alpha', 0.1, 1),
             'reg_lambda': trial.suggest_loguniform('reg_lambda', 0.1, 1),
             'eval_metric': 'binary:logistic',
-            'use_label_encoder': False,
-            'device': 'cuda' # Si no tienen GPU y linux comentar esta linea
+            'use_label_encoder': False
+            # 'device': 'cuda' # Si no tienen GPU y linux comentar esta linea
         }
         model = xgb.XGBClassifier(**params)
         model.fit(self.x_train, self.y_train)

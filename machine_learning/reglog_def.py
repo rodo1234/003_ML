@@ -1,5 +1,4 @@
 import optuna
-import xgboost as xgb
 from sklearn.metrics import f1_score
 from sklearn.linear_model import LogisticRegression
 import time
@@ -23,7 +22,7 @@ class REGLOGOptimizer:
             random_state=42
         )
         model.fit(x_train, y_train)
-        y_hat=model.predict(x_test)
+        y_hat = model.predict(x_test)
 
         return f1_score(y_test,y_hat)
 
