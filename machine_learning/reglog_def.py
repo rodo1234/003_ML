@@ -20,7 +20,7 @@ class REGLOGOptimizer:
             max_iter=10_000,
             penalty="elasticities",
             solver="saga",
-            random_state=RANDOM_STATE
+            random_state=42
         )
         model.fit(x_train, y_train)
         y_hat=model.predict(x_test)
