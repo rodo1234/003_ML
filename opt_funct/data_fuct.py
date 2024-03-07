@@ -1,6 +1,5 @@
 import ta
 class functions:
-    @property
     def clean_ds(df) -> object:
         for i in range(1, 4):
             df[f'X_t-{i}'] = df['Close'].shift(i)

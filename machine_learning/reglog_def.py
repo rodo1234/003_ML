@@ -11,20 +11,21 @@ class REGLOGOptimizer:
         self.x_test = x_test
         self.y_test = y_test
 
-    def opt_reglog(self, trial, x_train, y_train, x_test, y_test):
-        model = LogisticRegression(
-            C=trial.suggest_float("C", 0.001, 10),
-            fit_intercept=trial.suggest_categorical("fit_intercept", [True, False]),
-            l1_ratio=trial.suggets_float("l1_ratio", 0, 1),
-            max_iter=10_000,
-            penalty="elasticities",
-            solver="saga",
-            random_state=42
-        )
-        model.fit(x_train, y_train)
-        y_hat = model.predict(x_test)
-
-        return f1_score(y_test,y_hat)
+    def opt_reglog(self, trial):
+        params = {
+            'C': trial.suggest_float("C", 0.001, 10),
+            'fit_intercept': trial.suggest_categorical("fit_intercept", [True, False]),
+            'l1_ratio': trial.suggest_float("l1_ratio", 0, 1),
+            'max_iter': 10_000,
+            'penalty': "elasticnet",
+            'solver': "saga",
+            'random_state': 42
+        }
+        model = LogisticRegression(**params)
+        model.fit(self.x_train, self.y_train)
+        y_pred = model.predict(self.x_test)
+        f1 = f1_score(self.y_test, y_pred)
+        return f1
 
     def reglog_optuna(self):
         start_time = time.time()
@@ -34,5 +35,6 @@ class REGLOGOptimizer:
         print('Accuracy: {}'.format(trial.value))
         print("Best hyperparameters: {}".format(trial.params))
         end_time = time.time()
-        print("Execution time: {} seconds".format(end_time - start_time))
+        execution_time_minutes = (end_time - start_time) / 60
+        print("Execution time: {} minutes".format(execution_time_minutes))
         return trial.params
