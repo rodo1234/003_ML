@@ -1,6 +1,7 @@
 import ta
 class functions:
-    def clean_ds(df) -> object:
+    def clean_ds(df):
+        df = df.copy()
         for i in range(1, 4):
             df[f'X_t-{i}'] = df['Close'].shift(i)
 
@@ -12,10 +13,10 @@ class functions:
         df['RSI'] = rsi_data.rsi()
 
         # La Y
-        df['Y_BUY'] = df['Close'] * (1 + 0.02) < df['Pt_5']
-        df['Y_SELL'] = df['Close'] * (1 - 0.02) > df['Pt_5']
+        df['Y_BUY'] = df['Close'] < df['Pt_5']
+        df['Y_SELL'] = df['Close'] > df['Pt_5']
 
-        df['Y_BUY'] = df['Y_BUY'].astype(int)
-        df['Y_SELL'] = df['Y_SELL'].astype(int)
+        # df['Y_BUY'] = df['Y_BUY'].astype(int)
+        # df['Y_SELL'] = df['Y_SELL'].astype(int)
 
         return df

@@ -32,9 +32,11 @@ class REGLOGOptimizer:
         study = optuna.create_study(direction='maximize')
         study.optimize(lambda trial: self.opt_reglog(trial), n_trials=100)
         trial = study.best_trial
-        print('Accuracy: {}'.format(trial.value))
+        print('F1 Score: {}'.format(trial.value))
         print("Best hyperparameters: {}".format(trial.params))
         end_time = time.time()
         execution_time_minutes = (end_time - start_time) / 60
         print("Execution time: {} minutes".format(execution_time_minutes))
-        return trial.params
+        best_model = LogisticRegression(**trial.params)
+        best_model.fit(self.x_train, self.y_train)
+        return trial.params, best_model

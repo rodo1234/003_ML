@@ -13,17 +13,15 @@ class XGBOptimizer:
 
     def opt_xgb(self, trial):
         params = {
-            'n_estimators': trial.suggest_int('n_estimators', 100, 1000),
-            'max_depth': trial.suggest_int('max_depth', 3, 10),
-            'max_leaves': trial.suggest_int('max_leaves', 3, 10),
-            'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.3),
+            'n_estimators': trial.suggest_int('n_estimators', 5, 150),
+            'max_depth': trial.suggest_int('max_depth', 3, 100),
+            'max_leaves': trial.suggest_int('max_leaves', 3, 100),
+            'learning_rate': trial.suggest_float('learning_rate', 0.01, 2),
             'booster': trial.suggest_categorical('booster', ['gbtree', 'gblinear', 'dart']),
-            'gamma': trial.suggest_float('gamma', 0.1, 1),
-            'reg_alpha': trial.suggest_float('reg_alpha', 0.1, 1),
-            'reg_lambda': trial.suggest_float('reg_lambda', 0.1, 1),
-            'eval_metric': 'logloss',
-            'use_label_encoder': False,
-            'device': 'cuda' # Si no tienen GPU y linux comentar esta linea
+            'gamma': trial.suggest_float('gamma', 0.01, 50),
+            'reg_alpha': trial.suggest_float('reg_alpha', 0.01, 10),
+            'reg_lambda': trial.suggest_float('reg_lambda', 0.01, 10),
+            'random_state': 42,
         }
         model = xgb.XGBClassifier(**params)
         model.fit(self.x_train, self.y_train)
@@ -36,9 +34,11 @@ class XGBOptimizer:
         study = optuna.create_study(direction='maximize')
         study.optimize(lambda trial: self.opt_xgb(trial), n_trials=100)
         trial = study.best_trial
-        print('Accuracy: {}'.format(trial.value))
+        print('F1: {}'.format(trial.value))
         print("Best hyperparameters: {}".format(trial.params))
         end_time = time.time()
         execution_time_minutes = (end_time - start_time) / 60
         print("Execution time: {} minutes".format(execution_time_minutes))
-        return trial.params
+        best_model = xgb.XGBClassifier(**trial.params)
+        best_model.fit(self.x_train, self.y_train)
+        return trial.params, best_model

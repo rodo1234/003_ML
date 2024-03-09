@@ -17,7 +17,8 @@ class SVMOptimizer:
             'kernel': trial.suggest_categorical("kernel", ["linear", "rbf", "poly", "sigmoid"]),
             'degree': trial.suggest_int("degree", 2, 5),
             'gamma': trial.suggest_categorical("gamma", ["scale", "auto"] + [float(val) for val in range(1, 6)]),
-            'random_state': 42
+            'random_state': 42,
+            'max_iter': 10_000
         }
         model = SVC(**params)
         model.fit(self.x_train, self.y_train)
@@ -35,4 +36,6 @@ class SVMOptimizer:
         end_time = time.time()
         execution_time_minutes = (end_time - start_time) / 60
         print("Execution time: {} minutes".format(execution_time_minutes))
-        return trial.params
+        best_model = SVC(**trial.params)
+        best_model.fit(self.x_train, self.y_train)
+        return trial.params, best_model

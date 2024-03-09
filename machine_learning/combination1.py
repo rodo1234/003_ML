@@ -60,9 +60,10 @@ class Combined_xgb_logreg:
             study = optuna.create_study(direction='maximize')
             study.optimize(lambda trial: self.opt_combined(trial), n_trials=100)
             trial = study.best_trial
-            print('F1 Score: {}'.format(trial.value))
+            best_f1 = trial.value
+            print('F1 Score: {}'.format(best_f1))
             print("Best hyperparameters: {}".format(trial.params))
             end_time = time.time()
             execution_time_minutes = (end_time - start_time) / 60
             print("Execution time: {} minutes".format(execution_time_minutes))
-            return trial.params
+            return trial.params,best_f1
