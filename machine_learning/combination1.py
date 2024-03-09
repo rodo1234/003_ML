@@ -15,18 +15,16 @@ class Combined_xgb_logreg:
         def opt_combined(self, trial):
             # XGBoost parameters
             xgb_params = {
-                'n_estimators': trial.suggest_int('xgb_n_estimators', 100, 1000),
-                'max_depth': trial.suggest_int('xgb_max_depth', 3, 10),
-                'max_leaves': trial.suggest_int('xgb_max_leaves', 3, 10),
-                'learning_rate': trial.suggest_float('xgb_learning_rate', 0.01, 0.3),
-                'booster': trial.suggest_categorical('xgb_booster', ['gbtree', 'gblinear', 'dart']),
-                'gamma': trial.suggest_float('xgb_gamma', 0.1, 1),
-                'reg_alpha': trial.suggest_float('xgb_reg_alpha', 0.1, 1),
-                'reg_lambda': trial.suggest_float('xgb_reg_lambda', 0.1, 1),
-                'eval_metric': 'logloss',
-                'use_label_encoder': False,
-                'device': 'cuda'
-            }
+            'n_estimators': trial.suggest_int('n_estimators', 5, 150),
+            'max_depth': trial.suggest_int('max_depth', 3, 100),
+            'max_leaves': trial.suggest_int('max_leaves', 3, 100),
+            'learning_rate': trial.suggest_float('learning_rate', 0.01, 2),
+            'booster': trial.suggest_categorical('booster', ['gbtree', 'gblinear', 'dart']),
+            'gamma': trial.suggest_float('gamma', 0.01, 50),
+            'reg_alpha': trial.suggest_float('reg_alpha', 0.01, 10),
+            'reg_lambda': trial.suggest_float('reg_lambda', 0.01, 10),
+            'random_state': 42,
+        }
 
             # Logistic Regression parameters
             reglog_params = {
