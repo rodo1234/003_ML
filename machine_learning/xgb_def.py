@@ -32,7 +32,7 @@ class XGBOptimizer:
     def xgb_optuna(self):
         start_time = time.time()
         study = optuna.create_study(direction='maximize')
-        study.optimize(lambda trial: self.opt_xgb(trial), n_trials=100)
+        study.optimize(lambda trial: self.opt_xgb(trial), n_trials=10)
         trial = study.best_trial
         print('F1: {}'.format(trial.value))
         print("Best hyperparameters: {}".format(trial.params))
