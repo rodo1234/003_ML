@@ -16,9 +16,9 @@ class SVMOptimizer:
             'C': trial.suggest_float("C", 0.001, 10),
             'kernel': trial.suggest_categorical("kernel", ["linear", "rbf", "poly", "sigmoid"]),
             'degree': trial.suggest_int("degree", 2, 5),
-            'gamma': trial.suggest_categorical("gamma", ["scale", "auto"] + [float(val) for val in range(1, 6)]),
+            'gamma': trial.suggest_categorical("gamma", ["scale", "auto"]),
             'random_state': 42,
-            'max_iter': 10_000
+            'max_iter': 100_000
         }
         model = SVC(**params)
         model.fit(self.x_train, self.y_train)
