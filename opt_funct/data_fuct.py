@@ -342,7 +342,8 @@ class STRATEGY_XGBOOST_REGLOG_SVC_BUY:
 
 ########################## SELLL
 class STRATEGY_XGBOOST_SELL:
-    def __init__(self, df, cash, active_operations, com, n_shares, stop_loss_short, take_profit_short):
+    def __init__(self, df, cash, active_operations, com, n_shares, stop_loss_short,
+                 take_profit_short):
         self.df = df
         self.cash = cash
         self.active_operations = active_operations
@@ -358,37 +359,37 @@ class STRATEGY_XGBOOST_SELL:
             temp_operations = []
             for op in self.active_operations:
                 if op.operation_type == 'Short':
-                    # Actual profit or loss calculation needs to consider the initial and final prices
-                    profit_or_loss = (op.bought_at - row.Close) * op.n_shares
-                    if row.Close >= op.bought_at * (1 + self.stop_loss_short):  # Stop loss trigger
-                        self.cash += profit_or_loss * (1 - self.com)
-                    elif row.Close <= op.bought_at * (1 - self.take_profit_short):  # Take profit trigger
-                        self.cash += profit_or_loss * (1 - self.com)
+                    if op.stop_loss < row.Close:  # Close losing operations
+                        self.cash -= row.Close * op.n_shares * (1 + self.com)
+                    elif op.take_profit > row.Close:  # Close profits
+                        self.cash -= row.Close * op.n_shares * (1 + self.com)
                     else:
                         temp_operations.append(op)
             self.active_operations = temp_operations
 
             # Execute New Operations
-            if (row['xg_boost_sell'] & row['SVC_sell']) and self.cash >= row['Close'] * self.n_shares * (1 + self.com):
-                self.active_operations.append(Operation(
-                    operation_type='Short',
-                    bought_at=row['Close'],
-                    timestamp=row.Timestamp,
-                    n_shares=self.n_shares,
-                    stop_loss=row['Close'] * (1 + self.stop_loss_short),
-                    take_profit=row['Close'] * (1 - self.take_profit_short)))
-                # Note: When short selling, you're borrowing shares to sell them at the current price.
-                self.cash += row['Close'] * self.n_shares * (1 - self.com)
+            if self.cash >= row['Close'] * self.n_shares * (1 + self.com):
 
-            # Calculate Strategy Value
-            open_positions_value = sum((op.bought_at - row['Close']) * op.n_shares for op in self.active_operations)
+                if row['xg_boost_sell']:
+                    self.active_operations.append(Operation(operation_type='Short',
+                                                            bought_at=row['Close'],
+                                                            timestamp=row.Timestamp,
+                                                            n_shares=self.n_shares,
+                                                            stop_loss=row['Close'] * (1 + self.stop_loss_short),
+                                                            take_profit=row['Close'] * self.take_profit_short))
+
+                    self.cash += row['Close'] * self.n_shares * (1 - self.com)
+
+                    # Calculate Strategy Value
+            open_positions_value = sum(op.n_shares * row['Close'] for op in self.active_operations)
             self.strategy_value.append(self.cash + open_positions_value)
 
         return self.strategy_value[-1]
 
 
 class STRATEGY_REGLOG_SELL:
-    def __init__(self, df, cash, active_operations, com, n_shares, stop_loss_short, take_profit_short):
+    def __init__(self, df, cash, active_operations, com, n_shares, stop_loss_short,
+                 take_profit_short):
         self.df = df
         self.cash = cash
         self.active_operations = active_operations
@@ -404,37 +405,37 @@ class STRATEGY_REGLOG_SELL:
             temp_operations = []
             for op in self.active_operations:
                 if op.operation_type == 'Short':
-                    # Actual profit or loss calculation needs to consider the initial and final prices
-                    profit_or_loss = (op.bought_at - row.Close) * op.n_shares
-                    if row.Close >= op.bought_at * (1 + self.stop_loss_short):  # Stop loss trigger
-                        self.cash += profit_or_loss * (1 - self.com)
-                    elif row.Close <= op.bought_at * (1 - self.take_profit_short):  # Take profit trigger
-                        self.cash += profit_or_loss * (1 - self.com)
+                    if op.stop_loss < row.Close:  # Close losing operations
+                        self.cash -= row.Close * op.n_shares * (1 + self.com)
+                    elif op.take_profit > row.Close:  # Close profits
+                        self.cash -= row.Close * op.n_shares * (1 + self.com)
                     else:
                         temp_operations.append(op)
             self.active_operations = temp_operations
 
             # Execute New Operations
-            if (row['xg_boost_sell'] & row['SVC_sell']) and self.cash >= row['Close'] * self.n_shares * (1 + self.com):
-                self.active_operations.append(Operation(
-                    operation_type='Short',
-                    bought_at=row['Close'],
-                    timestamp=row.Timestamp,
-                    n_shares=self.n_shares,
-                    stop_loss=row['Close'] * (1 + self.stop_loss_short),
-                    take_profit=row['Close'] * (1 - self.take_profit_short)))
-                # Note: When short selling, you're borrowing shares to sell them at the current price.
-                self.cash += row['Close'] * self.n_shares * (1 - self.com)
+            if self.cash >= row['Close'] * self.n_shares * (1 + self.com):
 
-            # Calculate Strategy Value
-            open_positions_value = sum((op.bought_at - row['Close']) * op.n_shares for op in self.active_operations)
+                if row['reg_log_sell']:
+                    self.active_operations.append(Operation(operation_type='Short',
+                                                            bought_at=row['Close'],
+                                                            timestamp=row.Timestamp,
+                                                            n_shares=self.n_shares,
+                                                            stop_loss=row['Close'] * (1 + self.stop_loss_short),
+                                                            take_profit=row['Close'] * self.take_profit_short))
+
+                    self.cash += row['Close'] * self.n_shares * (1 - self.com)
+
+                    # Calculate Strategy Value
+            open_positions_value = sum(op.n_shares * row['Close'] for op in self.active_operations)
             self.strategy_value.append(self.cash + open_positions_value)
 
         return self.strategy_value[-1]
 
 
 class STRATEGY_SVC_SELL:
-    def __init__(self, df, cash, active_operations, com, n_shares, stop_loss_short, take_profit_short):
+    def __init__(self, df, cash, active_operations, com, n_shares, stop_loss_short,
+                 take_profit_short):
         self.df = df
         self.cash = cash
         self.active_operations = active_operations
@@ -450,30 +451,29 @@ class STRATEGY_SVC_SELL:
             temp_operations = []
             for op in self.active_operations:
                 if op.operation_type == 'Short':
-                    # Actual profit or loss calculation needs to consider the initial and final prices
-                    profit_or_loss = (op.bought_at - row.Close) * op.n_shares
-                    if row.Close >= op.bought_at * (1 + self.stop_loss_short):  # Stop loss trigger
-                        self.cash += profit_or_loss * (1 - self.com)
-                    elif row.Close <= op.bought_at * (1 - self.take_profit_short):  # Take profit trigger
-                        self.cash += profit_or_loss * (1 - self.com)
+                    if op.stop_loss < row.Close:  # Close losing operations
+                        self.cash -= row.Close * op.n_shares * (1 + self.com)
+                    elif op.take_profit > row.Close:  # Close profits
+                        self.cash -= row.Close * op.n_shares * (1 + self.com)
                     else:
                         temp_operations.append(op)
             self.active_operations = temp_operations
 
             # Execute New Operations
-            if (row['xg_boost_sell'] & row['SVC_sell']) and self.cash >= row['Close'] * self.n_shares * (1 + self.com):
-                self.active_operations.append(Operation(
-                    operation_type='Short',
-                    bought_at=row['Close'],
-                    timestamp=row.Timestamp,
-                    n_shares=self.n_shares,
-                    stop_loss=row['Close'] * (1 + self.stop_loss_short),
-                    take_profit=row['Close'] * (1 - self.take_profit_short)))
-                # Note: When short selling, you're borrowing shares to sell them at the current price.
-                self.cash += row['Close'] * self.n_shares * (1 - self.com)
+            if self.cash >= row['Close'] * self.n_shares * (1 + self.com):
 
-            # Calculate Strategy Value
-            open_positions_value = sum((op.bought_at - row['Close']) * op.n_shares for op in self.active_operations)
+                if row['SVC_sell']:
+                    self.active_operations.append(Operation(operation_type='Short',
+                                                            bought_at=row['Close'],
+                                                            timestamp=row.Timestamp,
+                                                            n_shares=self.n_shares,
+                                                            stop_loss=row['Close'] * (1 + self.stop_loss_short),
+                                                            take_profit=row['Close'] * self.take_profit_short))
+
+                    self.cash += row['Close'] * self.n_shares * (1 - self.com)
+
+                    # Calculate Strategy Value
+            open_positions_value = sum(op.n_shares * row['Close'] for op in self.active_operations)
             self.strategy_value.append(self.cash + open_positions_value)
 
         return self.strategy_value[-1]
@@ -481,7 +481,8 @@ class STRATEGY_SVC_SELL:
 
 
 class STRATEGY_XGBOOST_REGLOG_SELL:
-    def __init__(self, df, cash, active_operations, com, n_shares, stop_loss_short, take_profit_short):
+    def __init__(self, df, cash, active_operations, com, n_shares, stop_loss_short,
+                 take_profit_short):
         self.df = df
         self.cash = cash
         self.active_operations = active_operations
@@ -497,37 +498,37 @@ class STRATEGY_XGBOOST_REGLOG_SELL:
             temp_operations = []
             for op in self.active_operations:
                 if op.operation_type == 'Short':
-                    # Actual profit or loss calculation needs to consider the initial and final prices
-                    profit_or_loss = (op.bought_at - row.Close) * op.n_shares
-                    if row.Close >= op.bought_at * (1 + self.stop_loss_short):  # Stop loss trigger
-                        self.cash += profit_or_loss * (1 - self.com)
-                    elif row.Close <= op.bought_at * (1 - self.take_profit_short):  # Take profit trigger
-                        self.cash += profit_or_loss * (1 - self.com)
+                    if op.stop_loss < row.Close:  # Close losing operations
+                        self.cash -= row.Close * op.n_shares * (1 + self.com)
+                    elif op.take_profit > row.Close:  # Close profits
+                        self.cash -= row.Close * op.n_shares * (1 + self.com)
                     else:
                         temp_operations.append(op)
             self.active_operations = temp_operations
 
             # Execute New Operations
-            if (row['xg_boost_sell'] & row['SVC_sell']) and self.cash >= row['Close'] * self.n_shares * (1 + self.com):
-                self.active_operations.append(Operation(
-                    operation_type='Short',
-                    bought_at=row['Close'],
-                    timestamp=row.Timestamp,
-                    n_shares=self.n_shares,
-                    stop_loss=row['Close'] * (1 + self.stop_loss_short),
-                    take_profit=row['Close'] * (1 - self.take_profit_short)))
-                # Note: When short selling, you're borrowing shares to sell them at the current price.
-                self.cash += row['Close'] * self.n_shares * (1 - self.com)
+            if self.cash >= row['Close'] * self.n_shares * (1 + self.com):
 
-            # Calculate Strategy Value
-            open_positions_value = sum((op.bought_at - row['Close']) * op.n_shares for op in self.active_operations)
+                if (row['xg_boost_sell'])&(row['reg_log_sell']):
+                    self.active_operations.append(Operation(operation_type='Short',
+                                                            bought_at=row['Close'],
+                                                            timestamp=row.Timestamp,
+                                                            n_shares=self.n_shares,
+                                                            stop_loss=row['Close'] * (1 + self.stop_loss_short),
+                                                            take_profit=row['Close'] * self.take_profit_short))
+
+                    self.cash += row['Close'] * self.n_shares * (1 - self.com)
+
+                    # Calculate Strategy Value
+            open_positions_value = sum(op.n_shares * row['Close'] for op in self.active_operations)
             self.strategy_value.append(self.cash + open_positions_value)
 
         return self.strategy_value[-1]
 
 
 class STRATEGY_XGBOOST_SVC_SELL:
-    def __init__(self, df, cash, active_operations, com, n_shares, stop_loss_short, take_profit_short):
+    def __init__(self, df, cash, active_operations, com, n_shares, stop_loss_short,
+                 take_profit_short):
         self.df = df
         self.cash = cash
         self.active_operations = active_operations
@@ -543,38 +544,37 @@ class STRATEGY_XGBOOST_SVC_SELL:
             temp_operations = []
             for op in self.active_operations:
                 if op.operation_type == 'Short':
-                    # Actual profit or loss calculation needs to consider the initial and final prices
-                    profit_or_loss = (op.bought_at - row.Close) * op.n_shares
-                    if row.Close >= op.bought_at * (1 + self.stop_loss_short):  # Stop loss trigger
-                        self.cash += profit_or_loss * (1 - self.com)
-                    elif row.Close <= op.bought_at * (1 - self.take_profit_short):  # Take profit trigger
-                        self.cash += profit_or_loss * (1 - self.com)
+                    if op.stop_loss < row.Close:  # Close losing operations
+                        self.cash -= row.Close * op.n_shares * (1 + self.com)
+                    elif op.take_profit > row.Close:  # Close profits
+                        self.cash -= row.Close * op.n_shares * (1 + self.com)
                     else:
                         temp_operations.append(op)
             self.active_operations = temp_operations
 
             # Execute New Operations
-            if (row['xg_boost_sell'] & row['SVC_sell']) and self.cash >= row['Close'] * self.n_shares * (1 + self.com):
-                self.active_operations.append(Operation(
-                    operation_type='Short',
-                    bought_at=row['Close'],
-                    timestamp=row.Timestamp,
-                    n_shares=self.n_shares,
-                    stop_loss=row['Close'] * (1 + self.stop_loss_short),
-                    take_profit=row['Close'] * (1 - self.take_profit_short)))
-                # Note: When short selling, you're borrowing shares to sell them at the current price.
-                self.cash += row['Close'] * self.n_shares * (1 - self.com)
+            if self.cash >= row['Close'] * self.n_shares * (1 + self.com):
 
-            # Calculate Strategy Value
-            open_positions_value = sum((op.bought_at - row['Close']) * op.n_shares for op in self.active_operations)
+                if (row['xg_boost_sell'])&(row['SVC_sell']):
+                    self.active_operations.append(Operation(operation_type='Short',
+                                                            bought_at=row['Close'],
+                                                            timestamp=row.Timestamp,
+                                                            n_shares=self.n_shares,
+                                                            stop_loss=row['Close'] * (1 + self.stop_loss_short),
+                                                            take_profit=row['Close'] * self.take_profit_short))
+
+                    self.cash += row['Close'] * self.n_shares * (1 - self.com)
+
+                    # Calculate Strategy Value
+            open_positions_value = sum(op.n_shares * row['Close'] for op in self.active_operations)
             self.strategy_value.append(self.cash + open_positions_value)
 
         return self.strategy_value[-1]
 
 
-
 class STRATEGY_REGLOG_SVC_SELL:
-    def __init__(self, df, cash, active_operations, com, n_shares, stop_loss_short, take_profit_short):
+    def __init__(self, df, cash, active_operations, com, n_shares, stop_loss_short,
+                 take_profit_short):
         self.df = df
         self.cash = cash
         self.active_operations = active_operations
@@ -590,37 +590,37 @@ class STRATEGY_REGLOG_SVC_SELL:
             temp_operations = []
             for op in self.active_operations:
                 if op.operation_type == 'Short':
-                    # Actual profit or loss calculation needs to consider the initial and final prices
-                    profit_or_loss = (op.bought_at - row.Close) * op.n_shares
-                    if row.Close >= op.bought_at * (1 + self.stop_loss_short):  # Stop loss trigger
-                        self.cash += profit_or_loss * (1 - self.com)
-                    elif row.Close <= op.bought_at * (1 - self.take_profit_short):  # Take profit trigger
-                        self.cash += profit_or_loss * (1 - self.com)
+                    if op.stop_loss < row.Close:  # Close losing operations
+                        self.cash -= row.Close * op.n_shares * (1 + self.com)
+                    elif op.take_profit > row.Close:  # Close profits
+                        self.cash -= row.Close * op.n_shares * (1 + self.com)
                     else:
                         temp_operations.append(op)
             self.active_operations = temp_operations
 
             # Execute New Operations
-            if (row['xg_boost_sell'] & row['SVC_sell']) and self.cash >= row['Close'] * self.n_shares * (1 + self.com):
-                self.active_operations.append(Operation(
-                    operation_type='Short',
-                    bought_at=row['Close'],
-                    timestamp=row.Timestamp,
-                    n_shares=self.n_shares,
-                    stop_loss=row['Close'] * (1 + self.stop_loss_short),
-                    take_profit=row['Close'] * (1 - self.take_profit_short)))
-                # Note: When short selling, you're borrowing shares to sell them at the current price.
-                self.cash += row['Close'] * self.n_shares * (1 - self.com)
+            if self.cash >= row['Close'] * self.n_shares * (1 + self.com):
 
-            # Calculate Strategy Value
-            open_positions_value = sum((op.bought_at - row['Close']) * op.n_shares for op in self.active_operations)
+                if (row['reg_log_sell'])&(row['SVC_sell']):
+                    self.active_operations.append(Operation(operation_type='Short',
+                                                            bought_at=row['Close'],
+                                                            timestamp=row.Timestamp,
+                                                            n_shares=self.n_shares,
+                                                            stop_loss=row['Close'] * (1 + self.stop_loss_short),
+                                                            take_profit=row['Close'] * self.take_profit_short))
+
+                    self.cash += row['Close'] * self.n_shares * (1 - self.com)
+
+                    # Calculate Strategy Value
+            open_positions_value = sum(op.n_shares * row['Close'] for op in self.active_operations)
             self.strategy_value.append(self.cash + open_positions_value)
 
         return self.strategy_value[-1]
 
 
 class STRATEGY_XGBOOST_REGLOG_SVC_SELL:
-    def __init__(self, df, cash, active_operations, com, n_shares, stop_loss_short, take_profit_short):
+    def __init__(self, df, cash, active_operations, com, n_shares, stop_loss_short,
+                 take_profit_short):
         self.df = df
         self.cash = cash
         self.active_operations = active_operations
@@ -636,30 +636,29 @@ class STRATEGY_XGBOOST_REGLOG_SVC_SELL:
             temp_operations = []
             for op in self.active_operations:
                 if op.operation_type == 'Short':
-                    # Actual profit or loss calculation needs to consider the initial and final prices
-                    profit_or_loss = (op.bought_at - row.Close) * op.n_shares
-                    if row.Close >= op.bought_at * (1 + self.stop_loss_short):  # Stop loss trigger
-                        self.cash += profit_or_loss * (1 - self.com)
-                    elif row.Close <= op.bought_at * (1 - self.take_profit_short):  # Take profit trigger
-                        self.cash += profit_or_loss * (1 - self.com)
+                    if op.stop_loss < row.Close:  # Close losing operations
+                        self.cash -= row.Close * op.n_shares * (1 + self.com)
+                    elif op.take_profit > row.Close:  # Close profits
+                        self.cash -= row.Close * op.n_shares * (1 + self.com)
                     else:
                         temp_operations.append(op)
             self.active_operations = temp_operations
 
             # Execute New Operations
-            if (row['xg_boost_sell'] & row['SVC_sell']) and self.cash >= row['Close'] * self.n_shares * (1 + self.com):
-                self.active_operations.append(Operation(
-                    operation_type='Short',
-                    bought_at=row['Close'],
-                    timestamp=row.Timestamp,
-                    n_shares=self.n_shares,
-                    stop_loss=row['Close'] * (1 + self.stop_loss_short),
-                    take_profit=row['Close'] * (1 - self.take_profit_short)))
-                # Note: When short selling, you're borrowing shares to sell them at the current price.
-                self.cash += row['Close'] * self.n_shares * (1 - self.com)
+            if self.cash >= row['Close'] * self.n_shares * (1 + self.com):
 
-            # Calculate Strategy Value
-            open_positions_value = sum((op.bought_at - row['Close']) * op.n_shares for op in self.active_operations)
+                if (row['xg_boost_sell'])&(row['reg_log_sell'])&(row['SVC_sell']):
+                    self.active_operations.append(Operation(operation_type='Short',
+                                                            bought_at=row['Close'],
+                                                            timestamp=row.Timestamp,
+                                                            n_shares=self.n_shares,
+                                                            stop_loss=row['Close'] * (1 + self.stop_loss_short),
+                                                            take_profit=row['Close'] * self.take_profit_short))
+
+                    self.cash += row['Close'] * self.n_shares * (1 - self.com)
+
+                    # Calculate Strategy Value
+            open_positions_value = sum(op.n_shares * row['Close'] for op in self.active_operations)
             self.strategy_value.append(self.cash + open_positions_value)
 
         return self.strategy_value[-1]
