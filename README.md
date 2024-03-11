@@ -3,6 +3,18 @@
 
 En este proyecto nos enfocamos en la implementación de tres potentes modelos de clasificación: Regresión Logística, Support Vector Classification (SVC) y XGBoost. Nuestra meta es trascender la mera predicción de precios de acciones, centrándonos en la clasificación de señales de compra y venta sobre de información sobre diferentes intervalos de tiempo. Este enfoque nos capacita para anticipar con precisión si el precio de una acción estará dentro de un rango específico, brindando así una herramienta estratégica para maximizar la ganancia esperada.
 
+## Descripción de Modelos
+1. Regresión Logística: Es un algoritmo de clasificación que se utiliza para predecir la probabilidad de una variable dependiente categórica. En la regresión logística, la variable dependiente es una variable binaria que contiene datos codificados como 1 (sí, éxito, etc.) o 0 (no, fracaso, etc.). En otras palabras, el modelo de regresión logística predice P(Y=1) en función de X.
+
+2. Support Vector Classification (SVC): Es un algoritmo de aprendizaje automático que se utiliza en problemas de clasificación y regresión. SVCs son más comúnmente utilizados en problemas de clasificación. Este algoritmo crea un hiperplano o líneas de decisión que separan las clases lo más posible. Los puntos de datos que están más cerca del hiperplano se llaman vectores de soporte.
+
+3. XGBoost: Es una implementación de los árboles de decisión de gradiente potenciado diseñados para la velocidad y el rendimiento. XGBoost es una abreviatura de eXtreme Gradient Boosting. El "Gradient Boosting" se refiere al hecho de que el algoritmo utiliza la técnica de descenso de gradiente para minimizar el error al añadir nuevos modelos.
+
+## Datos de entrada y salida
+
+1. Para nuestras X o datos de salida usamos el precio Close, x_t-n en este caso hasta -3 y el RSI con ventana de 28.
+2. Para la Y o datos de salida usamos una condicion para ver si el precio xt era menor para determinar la compra y menor la venta dependiendo del quinto precio en los datos (P_t+5)
+
 ### Parámetros por operación
 
 1. Stop Loss Long: Este parámetro establece el nivel de precio al cual se activará una orden de venta para cerrar una posición larga y limitar las pérdidas. (0.01, 0.95)
